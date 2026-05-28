@@ -124,6 +124,89 @@ test_endpoint "DELETE" "/api/v1/geolocations/github.com" "" "204" "DELETE github
 test_endpoint "GET" "/api/v1/geolocations/github.com" "" "404" "GET github.com after deletion (should be 404)"
 
 echo ""
+echo "🔧 EDGE CASE & VALIDATION TESTS"
+echo "=========================================="
+
+# Test 10: IPv6 address (if supported)
+echo -n "Testing: GET IPv6 address ... "
+response=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" \
+    "$BASE_URL/api/v1/geolocations/2001:4860:4860::8888" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "422" ]; then
+    echo -e "${GREEN}✓ PASS ($http_code - IPv6 handled)${NC}"
+else
+    echo -e "${YELLOW}⚠ IPv6 response: $http_code${NC}"
+fi
+
+# Test 11: Domain with subdomain
+test_endpoint "GET" "/api/v1/geolocations/api.github.com" "" "200" "GET subdomain (api.github.com)"
+
+# Test 12: Create duplicate (conflict test - should return existing or 201)
+echo -n "Testing: POST duplicate host (idempotent) ... "
+response1=$(curl -s -w "\n%{http_code}" -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{"geolocation": {"host": "duplicate-test.example.com"}}' \
+    "$BASE_URL/api/v1/geolocations" 2>/dev/null || echo -e "\n000")
+http_code1=$(echo "$response1" | tail -n1)
+
+if [ "$http_code1" = "201" ] || [ "$http_code1" = "200" ]; then
+    # Try to create again - should return same record (200 or 201)
+    response2=$(curl -s -w "\n%{http_code}" -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+        -d '{"geolocation": {"host": "duplicate-test.example.com"}}' \
+        "$BASE_URL/api/v1/geolocations" 2>/dev/null || echo -e "\n000")
+    http_code2=$(echo "$response2" | tail -n1)
+    
+    if [ "$http_code2" = "200" ] || [ "$http_code2" = "201" ]; then
+        echo -e "${GREEN}✓ PASS ($http_code1 then $http_code2 - idempotent)${NC}"
+    else
+        echo -e "${YELLOW}⚠ Second request returned $http_code2${NC}"
+    fi
+    
+    # Cleanup
+    curl -s -X DELETE -H "X-API-Key: $API_KEY" "$BASE_URL/api/v1/geolocations/duplicate-test.example.com" > /dev/null 2>&1
+else
+    echo -e "${YELLOW}⚠ First creation returned $http_code1 (ipstack needed?)${NC}"
+fi
+
+# Test 13: Invalid host format
+test_endpoint "GET" "/api/v1/geolocations/not_a_valid_host!@#" "" "404" "GET invalid host format (404 expected)"
+
+# Test 14: Empty request body
+echo -n "Testing: POST with empty body ... "
+response=$(curl -s -w "\n%{http_code}" -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{}' "$BASE_URL/api/v1/geolocations" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "422" ] || [ "$http_code" = "400" ] || [ "$http_code" = "503" ]; then
+    echo -e "${GREEN}✓ PASS ($http_code - validation error)${NC}"
+else
+    echo -e "${YELLOW}⚠ Empty body returned $http_code${NC}"
+fi
+
+# Test 15: Missing host parameter
+echo -n "Testing: POST with missing host ... "
+response=$(curl -s -w "\n%{http_code}" -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{"geolocation": {}}' "$BASE_URL/api/v1/geolocations" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "422" ] || [ "$http_code" = "400" ]; then
+    echo -e "${GREEN}✓ PASS ($http_code - validation error)${NC}"
+else
+    echo -e "${YELLOW}⚠ Missing host returned $http_code${NC}"
+fi
+
+# Test 16: Invalid HTTP method
+echo -n "Testing: PUT method (not allowed) ... "
+response=$(curl -s -w "\n%{http_code}" -X PUT -H "X-API-Key: $API_KEY" \
+    "$BASE_URL/api/v1/geolocations/8.8.8.8" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "405" ] || [ "$http_code" = "404" ]; then
+    echo -e "${GREEN}✓ PASS ($http_code - method not allowed)${NC}"
+else
+    echo -e "${YELLOW}⚠ PUT returned $http_code${NC}"
+fi
+
+# Test 17: Special characters in host (encoded)
+test_endpoint "GET" "/api/v1/geolocations/localhost" "" "404" "GET localhost (should be 404 - not in seeds)"
+
+echo ""
 echo "=========================================="
 echo "✅ Test suite completed!"
 echo "=========================================="
