@@ -35,3 +35,20 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+
+# Rails boilerplate not used in this API
+app/jobs/
+app/mailers/
+app/views/
+config/credentials.yml.enc
+config/master.key
+config/ci.rb
+config/deploy.yml
+config/recurring.yml
+config/bundler-audit.yml
+.kamal/
+log/
+storage/
+tmp/
+vendor/
+.DS_Store
