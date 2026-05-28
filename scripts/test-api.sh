@@ -6,7 +6,11 @@
 
 set -e
 
-API_KEY="${1:-test123}"
+# Read API_KEY from .env if not provided as argument
+if [ -f .env ]; then
+    ENV_API_KEY=$(grep "^API_KEY=" .env | cut -d'=' -f2 | tr -d ' ')
+fi
+API_KEY="${1:-${ENV_API_KEY:-test123}}"
 BASE_URL="${2:-http://localhost:3000}"
 
 echo "=========================================="
