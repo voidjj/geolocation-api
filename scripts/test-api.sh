@@ -124,6 +124,43 @@ test_endpoint "DELETE" "/api/v1/geolocations/github.com" "" "204" "DELETE github
 test_endpoint "GET" "/api/v1/geolocations/github.com" "" "404" "GET github.com after deletion (should be 404)"
 
 echo ""
+echo "🌍 IPSTACK CREATE TESTS (various hosts)"
+echo "=========================================="
+
+# Array of test hosts
+declare -a HOSTS=(
+    "9.9.9.9:Quad9 DNS"
+    "208.67.222.222:OpenDNS"
+    "cloudflare.com:Cloudflare domain"
+    "stackoverflow.com:Stack Overflow"
+    "httpbin.org:HTTPBin testing service"
+)
+
+for host_data in "${HOSTS[@]}"; do
+    IFS=':' read -r host desc <<< "$host_data"
+    
+    echo -n "Testing: POST $desc ($host) ... "
+    response=$(curl -s -w "\n%{http_code}" -X POST \
+        -H "X-API-Key: $API_KEY" \
+        -H "Content-Type: application/json" \
+        -d "{\"geolocation\": {\"host\": \"$host\"}}" \
+        "$BASE_URL/api/v1/geolocations" 2>/dev/null || echo -e "\n000")
+    http_code=$(echo "$response" | tail -n1)
+    
+    if [ "$http_code" = "201" ]; then
+        echo -e "${GREEN}✓ PASS ($http_code)${NC}"
+        # Cleanup - delete what we created
+        curl -s -X DELETE -H "X-API-Key: $API_KEY" "$BASE_URL/api/v1/geolocations/$host" > /dev/null 2>&1
+    elif [ "$http_code" = "200" ]; then
+        echo -e "${GREEN}✓ PASS ($http_code - already existed)${NC}"
+    elif [ "$http_code" = "503" ]; then
+        echo -e "${YELLOW}⚠ SERVICE UNAVAILABLE (ipstack error)${NC}"
+    else
+        echo -e "${RED}✗ FAIL ($http_code)${NC}"
+    fi
+done
+
+echo ""
 echo "🔧 EDGE CASE & VALIDATION TESTS"
 echo "=========================================="
 
