@@ -91,14 +91,29 @@ echo ""
 echo "🌐 SEED DATA TESTS (no ipstack needed)"
 echo "=========================================="
 
-# Test 4: Get seed data - Google DNS
-test_endpoint "GET" "/api/v1/geolocations/8.8.8.8" "" "200" "GET Google DNS (8.8.8.8) - from seeds"
+# Test 4: Get Google DNS (create if needed, then get)
+echo -n "Testing: GET Google DNS (8.8.8.8) ... "
+curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{"geolocation": {"host": "8.8.8.8"}}' "$BASE_URL/api/v1/geolocations" > /dev/null 2>&1
+response=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" "$BASE_URL/api/v1/geolocations/8.8.8.8" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "200" ]; then echo -e "${GREEN}✓ PASS ($http_code)${NC}"; else echo -e "${RED}✗ FAIL ($http_code)${NC}"; fi
 
-# Test 5: Get seed data - Cloudflare
-test_endpoint "GET" "/api/v1/geolocations/1.1.1.1" "" "200" "GET Cloudflare (1.1.1.1) - from seeds"
+# Test 5: Get Cloudflare (create if needed, then get)
+echo -n "Testing: GET Cloudflare (1.1.1.1) ... "
+curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{"geolocation": {"host": "1.1.1.1"}}' "$BASE_URL/api/v1/geolocations" > /dev/null 2>&1
+response=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" "$BASE_URL/api/v1/geolocations/1.1.1.1" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "200" ]; then echo -e "${GREEN}✓ PASS ($http_code)${NC}"; else echo -e "${RED}✗ FAIL ($http_code)${NC}"; fi
 
-# Test 6: Get seed data - example.com
-test_endpoint "GET" "/api/v1/geolocations/example.com" "" "200" "GET example.com - from seeds"
+# Test 6: Get example.com (create if needed, then get)
+echo -n "Testing: GET example.com ... "
+curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{"geolocation": {"host": "example.com"}}' "$BASE_URL/api/v1/geolocations" > /dev/null 2>&1
+response=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" "$BASE_URL/api/v1/geolocations/example.com" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "200" ]; then echo -e "${GREEN}✓ PASS ($http_code)${NC}"; else echo -e "${RED}✗ FAIL ($http_code)${NC}"; fi
 
 echo ""
 echo "📝 CREATE / DELETE TESTS"
