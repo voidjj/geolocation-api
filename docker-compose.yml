@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: geolocation
+      POSTGRES_PASSWORD: geolocation
+      POSTGRES_DB: geolocation_api_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geolocation"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "3000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://geolocation:geolocation@db/geolocation_api_production
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      IPSTACK_API_KEY: ${IPSTACK_API_KEY}
+      API_KEY: ${API_KEY}
+
+volumes:
+  postgres_data:
