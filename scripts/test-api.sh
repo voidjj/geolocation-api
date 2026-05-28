@@ -157,6 +157,8 @@ for host_data in "${HOSTS[@]}"; do
         curl -s -X DELETE -H "X-API-Key: $API_KEY" "$BASE_URL/api/v1/geolocations/$host" > /dev/null 2>&1
     elif [ "$http_code" = "200" ]; then
         echo -e "${GREEN}✓ PASS ($http_code - already existed)${NC}"
+    elif [ "$http_code" = "422" ]; then
+        echo -e "${YELLOW}⚠ PASS ($http_code - ipstack can't locate this host)${NC}"
     elif [ "$http_code" = "503" ]; then
         echo -e "${YELLOW}⚠ SERVICE UNAVAILABLE (ipstack error)${NC}"
     else
