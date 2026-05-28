@@ -48,8 +48,8 @@ App will be available at `http://localhost:3000`. Database is created and seeded
 ```bash
 bundle install
 cp .env.example .env  # fill in your keys
-rails db:create db:migrate db:seed
-rails server
+bin/rails db:create db:migrate db:seed
+bin/rails server
 ```
 
 Environment variables (`.env`):
