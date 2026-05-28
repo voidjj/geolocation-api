@@ -2,7 +2,14 @@
 
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  ./bin/rails db:prepare
+  echo "Preparing database..."
+  if ./bin/rails db:prepare; then
+    # Seed if geolocations table is empty (first run)
+    if [ "$(./bin/rails runner 'puts Geolocation.count.zero?' 2>/dev/null)" == "true" ]; then
+      echo "Seeding database..."
+      ./bin/rails db:seed
+    fi
+  fi
 fi
 
 exec "${@}"

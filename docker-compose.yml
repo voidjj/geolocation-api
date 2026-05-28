@@ -8,7 +8,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U geolocation"]
+      test: ["CMD-SHELL", "pg_isready -U geolocation -d geolocation_api_production"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,11 +20,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://geolocation:geolocation@db/geolocation_api_production
-      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-      IPSTACK_API_KEY: ${IPSTACK_API_KEY}
-      API_KEY: ${API_KEY}
+      SECRET_KEY_BASE: "f8587b236623d15b3fd39d7a0facbe3f9e6dc1199e53bea9527f52f869fd48dde0e1816a01baee2ba1bdb9d8a09dade45dd100382f829b6f8aa4650377f25a1f"
 
 volumes:
   postgres_data:
