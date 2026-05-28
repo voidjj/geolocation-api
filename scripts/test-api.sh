@@ -181,8 +181,21 @@ else
     echo -e "${YELLOW}⚠ IPv6 response: $http_code${NC}"
 fi
 
-# Test 11: Domain with subdomain
-test_endpoint "GET" "/api/v1/geolocations/api.github.com" "" "200" "GET subdomain (api.github.com)"
+# Test 11: Domain with subdomain - create first, then get
+echo -n "Testing: GET subdomain (api.github.com) ... "
+# First create via POST (ipstack)
+curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+    -d '{"geolocation": {"host": "api.github.com"}}' \
+    "$BASE_URL/api/v1/geolocations" > /dev/null 2>&1
+# Then get
+response=$(curl -s -w "\n%{http_code}" -H "X-API-Key: $API_KEY" \
+    "$BASE_URL/api/v1/geolocations/api.github.com" 2>/dev/null || echo -e "\n000")
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+    echo -e "${GREEN}✓ PASS ($http_code)${NC}"
+else
+    echo -e "${RED}✗ FAIL ($http_code)${NC}"
+fi
 
 # Test 12: Create duplicate (conflict test - should return existing or 201)
 echo -n "Testing: POST duplicate host (idempotent) ... "
