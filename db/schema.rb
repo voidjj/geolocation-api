@@ -15,17 +15,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_132600) do
   enable_extension "pg_catalog.plpgsql"
 
   create_table "geolocations", force: :cascade do |t|
-    t.string "host", null: false
-    t.string "ip", null: false
+    t.string "city"
     t.string "country_code"
     t.string "country_name"
-    t.string "region_name"
-    t.string "city"
-    t.string "zip"
+    t.datetime "created_at", null: false
+    t.string "host", null: false
+    t.string "ip", null: false
     t.decimal "latitude", precision: 10, scale: 8
     t.decimal "longitude", precision: 11, scale: 8
-    t.datetime "created_at", null: false
+    t.string "region_name"
     t.datetime "updated_at", null: false
+    t.string "zip"
     t.index ["host"], name: "index_geolocations_on_host", unique: true
     t.index ["ip"], name: "index_geolocations_on_ip"
   end
