@@ -11,20 +11,34 @@ A RESTful API for storing and retrieving geolocation data based on IP addresses 
 
 ## Quick Start (Docker Compose)
 
-The easiest way to run the application — PostgreSQL is included:
+The easiest way to run the application — PostgreSQL is included.
+
+**1. Create `.env` file:**
 
 ```bash
-cp .env.example .env   # fill in RAILS_MASTER_KEY, IPSTACK_API_KEY, API_KEY
+cp .env.example .env
+```
+
+Edit `.env` and fill in the required values:
+
+```env
+# Any random string (min 32 characters) — used internally by Rails
+RAILS_MASTER_KEY=aabbccdd11223344556677889900aabbccdd11223344556677889900aabbccdd
+
+# Your API key for this app (choose any string, use it in X-API-Key header)
+API_KEY=my-secret-key
+
+# Get free key at https://ipstack.com/signup/free — needed for POST /geolocations
+IPSTACK_API_KEY=your_ipstack_key_here
+```
+
+**2. Start the app:**
+
+```bash
 docker-compose up --build
 ```
 
-App will be available at `http://localhost:3000`.
-
-To load sample geolocation records (no ipstack key needed):
-
-```bash
-docker-compose exec app bin/rails db:seed
-```
+App will be available at `http://localhost:3000`. Database is created and seeded automatically on first run.
 
 > The Dockerfile uses a multi-stage build with jemalloc and runs as a non-root user.
 
